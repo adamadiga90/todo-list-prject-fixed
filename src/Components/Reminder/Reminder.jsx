@@ -1,4 +1,6 @@
 import React, { useEffect, useReducer, useState } from "react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
 import "./reminder.css";
 import { useCheckDaysToEnd } from "../../AppContext";
 import { ACTIONS } from "../TodoList/TodoList";
@@ -25,7 +27,8 @@ const Reminder = () => {
   );
 
   const [addingVisible, setAddingVisible] = useState(false);
-  const [preData, setPreData] = useState(0);
+  const [preData, setPreData] = useState();
+  const [showCalendar, setShowCalendar] = useState(false);
   const [data, setData] = useState(0);
   const [name, setName] = useState("");
 
@@ -39,22 +42,15 @@ const Reminder = () => {
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (preData.length > 0) {
+    if (preData) {
       setData(preData);
       dispatch({
         type: ACTIONS.ADD_REMINDER,
-        payload: { date: preData, name: name },
+        payload: { date: preData.toISOString().split("T")[0], name: name },
       });
-      setPreData(0);
+      setPreData(null);
     }
   }
-
-  useEffect(() => {
-    console.log(preData);
-    console.log(preData.length);
-    // console.log(data);
-    console.log(reminders);
-  });
 
   useEffect(() => {
     localStorage.setItem("reminders", JSON.stringify(reminders));
@@ -66,45 +62,99 @@ const Reminder = () => {
     <div className="reminder-container ">
       <div className={`${addingVisible ? "blur-[1px]" : "blur-none"}`}>
         <h1>Reminders</h1>
-        <button onClick={() => setAddingVisible(true)}>Add a reminder</button>
+        <button
+          className="add-reminder-btn"
+          type="button"
+          onClick={() => setAddingVisible(true)}
+        >
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+          >
+            Add a reminder
+          </span>
+        </button>
       </div>
       {addingVisible ? (
-        <div className="adding-tab blur-none ">
-          <p>calendar</p>
-          <form className="flex flex-col gap-3">
+        <div className="adding-tab blur-none">
+          <h2 style={{ marginBottom: "8px" }}>Add Reminder</h2>
+          <form
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
             <input
-              className="bg-[#27108a] text-[#efeef7]"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Reminder name"
             />
-            <div className="flex justify-between items-center">
+            <div style={{ position: "relative" }}>
               <input
-                type="date"
-                value={preData}
-                onChange={(e) => setPreData(e.target.value)}
-                min={newDate}
+                type="text"
+                className="custom-datepicker"
+                value={preData ? preData.toLocaleDateString() : ""}
+                placeholder="Select date"
+                readOnly
+                onClick={() => setShowCalendar(true)}
+                style={{ cursor: "pointer" }}
               />
-
-              <div className="flex gap-3">
-                <button
-                  className="text-[#9987e5] font-bold [padding: 10px]"
-                  onClick={(e) => handleSubmit(e)}
+              {showCalendar && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "48px",
+                    left: 0,
+                    zIndex: 100,
+                  }}
                 >
-                  Submit
-                </button>
-                <button className="text-red-500">Cancel</button>
-              </div>
+                  <DayPicker
+                    mode="single"
+                    selected={preData}
+                    onSelect={(date) => {
+                      if (date && date >= new Date(newDate)) {
+                        setPreData(date);
+                        setShowCalendar(false);
+                      }
+                    }}
+                    disabled={{ before: new Date(newDate) }}
+                    modifiersClassNames={{
+                      selected: "rdp-day_selected",
+                      today: "rdp-day_today",
+                      disabled: "rdp-day_disabled",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+              <button className="button-main" onClick={(e) => handleSubmit(e)}>
+                Submit
+              </button>
+              <button
+                className="button-cancel"
+                type="button"
+                onClick={() => setAddingVisible(false)}
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
       ) : null}
-      <div className={`${addingVisible ? "blur-[1px]" : "blur-none"}`}>
-        {reminders && reminders.length && reminders.length > 0
-          ? reminders.map((reminderInfo) => (
+      <div
+        className={`reminder-list ${
+          addingVisible ? "blur-[1px]" : "blur-none"
+        }`}
+      >
+        {reminders && reminders.length > 0 ? (
+          reminders.map((reminderInfo, idx) => (
+            <div className="reminder-card" key={idx}>
               <ReminderElement reminderInfo={reminderInfo} />
-            ))
-          : null}
+            </div>
+          ))
+        ) : (
+          <p style={{ color: "#9987e5", textAlign: "center" }}>
+            No reminders yet.
+          </p>
+        )}
       </div>
     </div>
   );
