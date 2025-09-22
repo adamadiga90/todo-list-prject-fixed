@@ -1,0 +1,22 @@
+:root {
+  --primary-color: #9987e5;
+  --background-color: #040309;
+  --text-color: #efeef7;
+  --secondary-color: #27108a;
+  --accent-color: #542ef8;
+}
+
+.reminder-container {
+  position: relative;
+  font-size: 25px;
+  width: 50%;
+}
+.adding-tab {
+  position: absolute;
+  background-color: var(--text-color);
+  color: #27108a;
+  top: 50%;
+  right: 50%;
+  transform: translate(50%, -50%);
+  width: 75%;
+}
