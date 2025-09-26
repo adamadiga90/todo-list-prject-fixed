@@ -25,8 +25,6 @@
 }
 
 .todo-list-title {
-  text-align: center;
-  font-size: 2rem;
   font-weight: 700;
   color: var(--primary-color);
   margin: 24px 0 16px 0;
@@ -34,27 +32,43 @@
 }
 
 .todo-form-modern {
+  all: unset;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
+  /* margin-bottom: 18px; */
 }
-
-.modern-input {
+.input-from-todo-list {
+  all: unset;
   background: var(--input-bg);
   color: var(--input-text);
   border: 2px solid var(--primary-color);
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 1rem;
-  width: 100%;
+
+  width: 145%;
   transition: border 0.2s;
+  flex-shrink: 0;
 }
 .modern-input:focus {
   outline: none;
-  border: 2px solid var(--accent-color);
+  /* border: 2px solid var(--accent-color); */
 }
+.form-container {
+  all: unset;
 
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.dots-button {
+  position: absolute;
+  top: 54%;
+  right: 25%;
+  transform: translateY(-50%);
+}
 .add-todo-btn {
   background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
   color: #fff;
@@ -69,6 +83,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* width: 25%; */
+  min-width: 10px;
 }
 .add-todo-btn:hover {
   background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
