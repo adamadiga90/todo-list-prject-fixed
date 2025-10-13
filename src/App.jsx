@@ -6,6 +6,8 @@ import AppContextProvider from "./AppContext";
 import Info from "./pages/Info";
 
 const App = () => {
+  // localStorage.clear();
+
   return (
     <AppContextProvider className="App">
       {/* <Sidebar /> */}

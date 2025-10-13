@@ -34,7 +34,12 @@ function reducer(todos, action) {
       return JSON.parse(localStorage.getItem("todos"));
 
     case ACTIONS.TOGGLE_TODO:
-      return toggleFunction(todos, action.payload.id);
+      return toggleFunction(
+        todos,
+        action.payload.id,
+        action.payload.daysCount,
+        action.payload.year
+      );
     case ACTIONS.DELETE_TODO:
       if (
         localStorage.getItem("todos") &&
@@ -47,12 +52,18 @@ function reducer(todos, action) {
       });
   }
 }
-function toggleFunction(todos, id) {
+function toggleFunction(todos, id, daysCount, year) {
   return todos.map((todo) => {
     if (todo.id === id) {
       return {
         ...todo,
         isComplete: !todo.isComplete,
+        repeat: [
+          ...todo.repeat.slice(0, 1),
+          daysCount,
+          ...todo.repeat.slice(2, 3),
+          year,
+        ],
       };
     }
     return todo;
@@ -157,20 +168,20 @@ const TodoList = () => {
     let allTodos = JSON.parse(localStorage.getItem("todos"));
     if (allTodos && allTodos.length > 0) {
       allTodos.map((todo) => {
-        if (todo.repeat[3] !== year && todo.repeat[0]) {
+        if (todo.isComplete && todo.repeat[3] !== year && todo.repeat[0]) {
           todo.isComplete = false;
         }
-        if (todo.repeat[0] === "1") {
+        if (todo.isComplete && todo.repeat[0] === "1") {
           if (todo.repeat[1] + 1 <= daysCount) {
             todo.repeat[1] = daysCount;
             todo.isComplete = false;
           }
-        } else if (todo.repeat[0] === "2") {
+        } else if (todo.isComplete && todo.repeat[0] === "2") {
           if (todo.repeat[1] + 2 <= daysCount) {
             todo.repeat[1] = daysCount;
             todo.isComplete = false;
           }
-        } else if (todo.repeat[0] === "3") {
+        } else if (todo.isComplete && todo.repeat[0] === "3") {
           if (todo.repeat[1] + 3 <= daysCount) {
             todo.repeat[1] = daysCount;
             todo.isComplete = false;
@@ -178,7 +189,11 @@ const TodoList = () => {
         }
       });
     }
-    localStorage.setItem("todos", JSON.stringify(allTodos));
+    if (todos.length > 0) {
+      localStorage.setItem("todos", JSON.stringify(allTodos));
+    } else {
+      localStorage.setItem("todos", JSON.stringify([]));
+    }
   }
   useEffect(() => {
     setTimeout(() => {
@@ -194,7 +209,7 @@ const TodoList = () => {
 
   useEffect(() => {
     const dots = document.getElementsByClassName("dots-button");
-    console.log(dots);
+    // console.log(dots);
 
     function handleWindowClick(e) {
       if (
@@ -355,9 +370,7 @@ const TodoList = () => {
       </div>
       <h1 className="text-1xl ! todo-list-title">Todo-List</h1>
       <div className=" not-completed-todo-list">
-        {JSON.parse(localStorage.getItem("todos")) &&
-        JSON.parse(localStorage.getItem("todos")).length &&
-        JSON.parse(localStorage.getItem("todos")).length > 0 ? (
+        {todos && todos.length && todos.length > 0 ? (
           <div>
             <div className="todo-list">
               {todos.map((todo) =>

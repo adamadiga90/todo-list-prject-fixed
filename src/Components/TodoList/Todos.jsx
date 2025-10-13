@@ -57,8 +57,14 @@
 import React from "react";
 import { ACTIONS } from "./TodoList";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { useCheckDaysToEnd } from "../../AppContext";
 
 const Todos = ({ todo, dispatch }) => {
+  const daysAndToEnd = useCheckDaysToEnd();
+  const daysCount = daysAndToEnd[0];
+  const year = daysAndToEnd[3];
+  // console.log(year);
+
   return (
     <div className="todo-item">
       <div className="toggle-and-label">
@@ -66,7 +72,10 @@ const Todos = ({ todo, dispatch }) => {
           bg={todo.priority}
           title={`Priority ${todo.priority}`}
           onClick={() =>
-            dispatch({ type: ACTIONS.TOGGLE_TODO, payload: { id: todo.id } })
+            dispatch({
+              type: ACTIONS.TOGGLE_TODO,
+              payload: { id: todo.id, daysCount: daysCount, year: year },
+            })
           }
         >
           {todo.isComplete ? "✓" : ""}

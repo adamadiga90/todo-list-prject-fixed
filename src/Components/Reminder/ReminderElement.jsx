@@ -8,8 +8,10 @@ const ReminderElement = ({ reminderInfo, onDelete }) => {
           style={{ fontWeight: 500, fontSize: "1rem", letterSpacing: "0.5px" }}
         >
           {reminderInfo.name}
+          {reminderInfo.isComplete ? <span>yes</span> : <span>no</span>}
         </span>
         <span
+          // className={`${reminderInfo.isComplete}`}
           style={{ marginLeft: "16px", color: "#9987e5", fontSize: "0.95rem" }}
         >
           {reminderInfo.date}

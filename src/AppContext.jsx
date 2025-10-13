@@ -64,7 +64,6 @@ const AppContextProvider = ({ children }) => {
 
     daysToEndCount = daysToEndCount - date;
     let daysCount = 365 - daysToEndCount;
-
     return [daysCount, daysToEndCount, days, year, newDate];
   }
 

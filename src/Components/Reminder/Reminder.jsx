@@ -168,16 +168,31 @@ import React, { useReducer, useState, useEffect } from "react";
 import ReminderElement from "./ReminderElement";
 import "./reminder.css";
 import "../../App.css";
+import { useCheckDaysToEnd } from "../../AppContext";
 
 function reducer(reminders, action) {
   switch (action.type) {
     case "add-reminder":
-      return [...reminders, action.payload];
+      return addReminderFunction(
+        reminders,
+        action.payload.name,
+        action.payload.date
+      );
     case "delete-reminder":
       return reminders.filter((r, idx) => idx !== action.payload);
     default:
       return reminders;
   }
+}
+
+function addReminderFunction(reminders, name, date) {
+  let oldReminders = JSON.parse(localStorage.getItem("reminders")) || [];
+  let newReminders = [
+    ...oldReminders,
+    { name: name, id: Date.now(), date: date, isComplete: false },
+  ];
+  // localStorage.setItem("reminders", JSON.stringify(newReminders));
+  return newReminders;
 }
 
 const Reminder = () => {
@@ -189,6 +204,8 @@ const Reminder = () => {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
 
+  const daysAndToEnd = useCheckDaysToEnd();
+  const theDate = daysAndToEnd[4];
   useEffect(() => {
     localStorage.setItem("reminders", JSON.stringify(reminders));
   }, [reminders]);
@@ -198,13 +215,44 @@ const Reminder = () => {
     if (name && date) {
       dispatch({
         type: "add-reminder",
-        payload: { name, date },
+        payload: { name: name, date: date },
       });
       setName("");
       setDate("");
       setAddingVisible(false);
     }
   }
+
+  console.log(daysAndToEnd[4]);
+  let test = "2025-10-1";
+  console.log(+theDate.slice(8, 10));
+  console.log(+test.slice(8, 10));
+
+  function checkIsComplete() {
+    reminders.map((reminder, i) => {
+      // reminder.date === daysAndToEnd[4]
+      // reminder.date === test
+      //   ? (reminder.isComplete = true)
+      //   : (reminder.isComplete = false);
+      if (reminder.date === daysAndToEnd[4]) {
+        reminder.isComplete = true;
+      }
+      if (
+        +reminder.date.slice(5, 7) < +theDate.slice(5, 7) ||
+        (+reminder.date.slice(5, 7) === +theDate.slice(5, 7) &&
+          +reminder.date.slice(8, 10) < +theDate.slice(8, 10))
+      ) {
+        dispatch({ type: "delete-reminder", payload: i });
+        // reminder.isComplete =
+      }
+    });
+    // dispatch({type:"delete-reminder", payload:reminders[0].id})
+    // if ()
+  }
+
+  useEffect(() => {
+    checkIsComplete();
+  }, []);
 
   return (
     <div className="reminder-container modern">
