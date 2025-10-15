@@ -239,16 +239,6 @@
 }
 
 .reminder-card {
-  background: var(--card-bg);
-  color: var(--text-color);
-  border-radius: 10px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  justify-content: space-between;
-  box-shadow: var(--card-shadow);
-  padding: 10px 18px;
   transition: box-shadow 0.2s, transform 0.2s;
 }
 .reminder-card:hover {

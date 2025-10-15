@@ -164,7 +164,7 @@
 // };
 
 // export default Reminder;
-import React, { useReducer, useState, useEffect } from "react";
+import React, { useReducer, useState, useEffect, useRef } from "react";
 import ReminderElement from "./ReminderElement";
 import "./reminder.css";
 import "../../App.css";
@@ -174,9 +174,9 @@ function reducer(reminders, action) {
   switch (action.type) {
     case "add-reminder":
       return addReminderFunction(
-        reminders,
         action.payload.name,
-        action.payload.date
+        action.payload.date,
+        action.payload.localDate
       );
     case "delete-reminder":
       return reminders.filter((r, idx) => idx !== action.payload);
@@ -184,13 +184,14 @@ function reducer(reminders, action) {
       return reminders;
   }
 }
+console.log();
 
-function addReminderFunction(reminders, name, date) {
+function addReminderFunction(name, date, localDate) {
   let oldReminders = JSON.parse(localStorage.getItem("reminders")) || [];
   let newReminders = [
     ...oldReminders,
-    { name: name, id: Date.now(), date: date, isComplete: false },
-  ];
+    { name: name, id: Date.now(), date: date, isComplete: localDate === date },
+  ].sort((a, b) => b.isComplete - a.isComplete);
   // localStorage.setItem("reminders", JSON.stringify(newReminders));
   return newReminders;
 }
@@ -204,6 +205,30 @@ const Reminder = () => {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
 
+  const addingFrom = useRef();
+
+  useEffect(() => {
+    function handleOutsideFormClick(e) {
+      console.log(
+        document.getElementById("add-reminder-button").contains(e.target)
+      );
+
+      if (
+        addingVisible &&
+        !addingFrom.current.contains(e.target) &&
+        !document.getElementById("add-reminder-button").contains(e.target)
+      ) {
+        setAddingVisible(false);
+      }
+    }
+    if (addingVisible) {
+      document.addEventListener("click", handleOutsideFormClick);
+    }
+    return () => {
+      document.removeEventListener("click", handleOutsideFormClick);
+    };
+  }, [addingVisible]);
+
   const daysAndToEnd = useCheckDaysToEnd();
   const theDate = daysAndToEnd[4];
   useEffect(() => {
@@ -215,7 +240,8 @@ const Reminder = () => {
     if (name && date) {
       dispatch({
         type: "add-reminder",
-        payload: { name: name, date: date },
+
+        payload: { name: name, date: date, localDate: daysAndToEnd[4] },
       });
       setName("");
       setDate("");
@@ -224,16 +250,9 @@ const Reminder = () => {
   }
 
   console.log(daysAndToEnd[4]);
-  let test = "2025-10-1";
-  console.log(+theDate.slice(8, 10));
-  console.log(+test.slice(8, 10));
 
   function checkIsComplete() {
     reminders.map((reminder, i) => {
-      // reminder.date === daysAndToEnd[4]
-      // reminder.date === test
-      //   ? (reminder.isComplete = true)
-      //   : (reminder.isComplete = false);
       if (reminder.date === daysAndToEnd[4]) {
         reminder.isComplete = true;
       }
@@ -243,21 +262,27 @@ const Reminder = () => {
           +reminder.date.slice(8, 10) < +theDate.slice(8, 10))
       ) {
         dispatch({ type: "delete-reminder", payload: i });
-        // reminder.isComplete =
       }
     });
-    // dispatch({type:"delete-reminder", payload:reminders[0].id})
-    // if ()
+  }
+
+  function sortReminders() {
+    if (reminders.length > 0) {
+      reminders.sort((a, b) => b.isComplete - a.isComplete);
+    }
   }
 
   useEffect(() => {
+    console.log("Updated");
     checkIsComplete();
-  }, []);
+    sortReminders();
+  }, [reminders, localStorage.getItem("reminders")]);
 
   return (
     <div className="reminder-container modern">
-      <div className="form-container">
+      <div className="form-container relative">
         <button
+          id="add-reminder-button"
           className="add-reminder-btn"
           type="button"
           onClick={() => setAddingVisible(true)}
@@ -279,7 +304,11 @@ const Reminder = () => {
           </span>
         </button>
         {addingVisible && (
-          <form className="reminder-form-modern" onSubmit={handleSubmit}>
+          <form
+            ref={addingFrom}
+            className="reminder-form-modern absolute z-10 top-[500%] translate-y-[50%] left-[50%] translate-x-[-50%] bg-[#1a1333] px-20 py-10 rounded-[10px]"
+            onSubmit={handleSubmit}
+          >
             <input
               className="modern-input"
               type="text"

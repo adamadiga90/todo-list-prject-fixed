@@ -6,7 +6,7 @@ import "../../index.css";
 
 const Home = () => {
   return (
-    <div className="home-container flex gap-5 m-auto">
+    <div className="home-container flex gap-5 m-auto flex-col lg:flex-row">
       <TodoList />
       <Reminder />
       <Progress />

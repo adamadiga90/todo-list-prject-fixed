@@ -368,7 +368,7 @@ const TodoList = () => {
           </div>
         </div>
       </div>
-      <h1 className="text-1xl ! todo-list-title">Todo-List</h1>
+      <h1 className="todo-list-title">Todo-List</h1>
       <div className=" not-completed-todo-list">
         {todos && todos.length && todos.length > 0 ? (
           <div>

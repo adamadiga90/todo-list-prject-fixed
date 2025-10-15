@@ -4,6 +4,7 @@ const AppContext = React.createContext();
 export function useCheckDaysToEnd() {
   return useContext(AppContext);
 }
+
 const AppContextProvider = ({ children }) => {
   const [monthsDays, setMonthsDays] = useState([
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
@@ -31,7 +32,6 @@ const AppContextProvider = ({ children }) => {
   function checkDay() {
     let currentDay = new Date().getDay();
     let currentMonth = new Date().getMonth();
-    // console.log(currentDay, currentMonth);
   }
   let theCounter = 0;
   theCounter =
