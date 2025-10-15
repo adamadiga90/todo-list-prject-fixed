@@ -1,3 +1,258 @@
+import React, { useReducer, useState, useEffect, useRef } from "react";
+import ReminderElement from "./ReminderElement";
+import "./reminder.css";
+import "../../App.css";
+import { useCheckDaysToEnd } from "../../AppContext";
+
+function reducer(reminders, action) {
+  switch (action.type) {
+    case "add-reminder":
+      return addReminderFunction(
+        action.payload.name,
+        action.payload.date,
+        action.payload.localDate
+      );
+    case "delete-reminder":
+      return reminders.filter((r, idx) => idx !== action.payload);
+    default:
+      return reminders;
+  }
+}
+
+function addReminderFunction(name, date, localDate, modernDate) {
+  let dateArray = date.split("-");
+  let oldReminders = JSON.parse(localStorage.getItem("reminders")) || [];
+  let newReminders = [
+    ...oldReminders,
+    {
+      name: name,
+      id: Date.now(),
+      date: date,
+      isComplete: localDate === date,
+      modernDate:
+        dateArray[0] +
+        dateArray[1].padStart(2, "0") +
+        dateArray[2].padStart(2, "0"),
+    },
+  ];
+  // localStorage.setItem("reminders", JSON.stringify(newReminders));
+  return newReminders;
+}
+
+const Reminder = () => {
+  const [reminders, dispatch] = useReducer(
+    reducer,
+    JSON.parse(localStorage.getItem("reminders")) || []
+  );
+  const [addingVisible, setAddingVisible] = useState(false);
+  const [name, setName] = useState("");
+  const [date, setDate] = useState("");
+
+  const daysAndToEnd = useCheckDaysToEnd();
+  const yearAndMonthAndDay = daysAndToEnd[4];
+
+  const addingFrom = useRef();
+
+  let theYear1 = 2026;
+  let theDay1 = 33;
+  let theFullDate1 = +(
+    String(daysAndToEnd[3]) + String(daysAndToEnd[0]).padStart(3, "0")
+  );
+  let theFullDate2 = +(String(theYear1) + String(theDay1).padStart(3, "0"));
+  // console.log(theFullDate2);
+  // console.log(theFullDate2 > theFullDate1);
+  console.log(new Date().toISOString().split("T")[0]);
+
+  useEffect(() => {
+    function handleOutsideFormClick(e) {
+      if (
+        addingVisible &&
+        !addingFrom.current.contains(e.target) &&
+        !document.getElementById("add-reminder-button").contains(e.target)
+      ) {
+        setAddingVisible(false);
+      }
+    }
+    if (addingVisible) {
+      document.addEventListener("click", handleOutsideFormClick);
+    }
+    return () => {
+      document.removeEventListener("click", handleOutsideFormClick);
+    };
+  }, [addingVisible]);
+
+  useEffect(() => {
+    localStorage.setItem("reminders", JSON.stringify(reminders));
+  }, [reminders]);
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (name && date) {
+      dispatch({
+        type: "add-reminder",
+
+        payload: {
+          name: name,
+          date: date,
+          localDate: yearAndMonthAndDay,
+        },
+      });
+
+      setName("");
+      setDate("");
+      setAddingVisible(false);
+    }
+  }
+
+  let theTest = "2025-2-1".split("-");
+  let theNewTest =
+    theTest[0] + theTest[1].padStart(2, "0") + theTest[2].padStart(2, "0");
+  console.log(+theNewTest);
+
+  // console.log(reminders[1].modernDate);
+  // console.log(
+  //   +(String(daysAndToEnd[3]) + String(daysAndToEnd[0]).padStart(3, "0"))
+  // );
+  let dateArray = "2025-10-1".split("-");
+
+  console.log(
+    dateArray[0] + dateArray[1].padStart(2, "0") + dateArray[2].padStart(2, "0")
+  );
+  function checkIsComplete() {
+    let dateArray = yearAndMonthAndDay.split("-");
+    reminders.map((reminder, i) => {
+      if (reminder.date === daysAndToEnd[4]) {
+        reminder.isComplete = true;
+      }
+      if (
+        +reminder.modernDate <
+        +(
+          dateArray[0] +
+          dateArray[1].padStart(2, "0") +
+          dateArray[2].padStart(2, "0")
+        )
+      ) {
+        dispatch({ type: "delete-reminder", payload: i });
+      }
+    });
+  }
+
+  function sortReminders() {
+    if (reminders.length > 0) {
+      reminders.sort((a, b) => b.isComplete - a.isComplete);
+    }
+  }
+  useEffect(() => {
+    checkIsComplete();
+    // sortReminders();
+  }, [reminders, localStorage.getItem("reminders")]);
+
+  return (
+    <div className="reminder-container modern">
+      <div className="form-container relative">
+        <button
+          id="add-reminder-button"
+          className="add-reminder-btn"
+          type="button"
+          onClick={() => setAddingVisible(true)}
+        >
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+          >
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 5v14m7-7H5" />
+            </svg>
+            Add Reminder
+          </span>
+        </button>
+        {addingVisible && (
+          <form
+            ref={addingFrom}
+            className="reminder-form-modern absolute z-10 top-[500%] translate-y-[50%] left-[50%] translate-x-[-50%] bg-[#1a1333] px-20 py-10 rounded-[10px]"
+            onSubmit={handleSubmit}
+          >
+            <input
+              className="modern-input"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Reminder name"
+            />
+            <input
+              className="modern-input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              // min={new Date().toISOString().split("T")[0]}
+            />
+            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+              <button className="add-reminder-btn" type="submit">
+                Submit
+              </button>
+              <button
+                className="button-cancel"
+                type="button"
+                onClick={() => setAddingVisible(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+      <h1 className="reminder-list-title">Reminders</h1>
+      <div className="reminder-list modern">
+        {reminders && reminders.length > 0 ? (
+          <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-5 py-10 border-[#9987e5] border-b-[5px]">
+              {reminders.map((reminderInfo, idx) => {
+                if (reminderInfo.isComplete) {
+                  return (
+                    <div className="reminder-card" key={idx}>
+                      <ReminderElement
+                        reminderInfo={reminderInfo}
+                        onDelete={() =>
+                          dispatch({ type: "delete-reminder", payload: idx })
+                        }
+                      />
+                    </div>
+                  );
+                }
+              })}
+            </div>
+            <div>
+              {reminders.map((reminderInfo, idx) => {
+                if (!reminderInfo.isComplete) {
+                  return (
+                    <div className="reminder-card" key={idx}>
+                      <ReminderElement
+                        reminderInfo={reminderInfo}
+                        onDelete={() =>
+                          dispatch({ type: "delete-reminder", payload: idx })
+                        }
+                      />
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          </div>
+        ) : (
+          <p className="empty-list-text">No reminders yet. Add one above!</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Reminder;
+
 // import React, { useEffect, useReducer, useState } from "react";
 // import { DayPicker } from "react-day-picker";
 // import "react-day-picker/dist/style.css";
@@ -164,199 +419,3 @@
 // };
 
 // export default Reminder;
-import React, { useReducer, useState, useEffect, useRef } from "react";
-import ReminderElement from "./ReminderElement";
-import "./reminder.css";
-import "../../App.css";
-import { useCheckDaysToEnd } from "../../AppContext";
-
-function reducer(reminders, action) {
-  switch (action.type) {
-    case "add-reminder":
-      return addReminderFunction(
-        action.payload.name,
-        action.payload.date,
-        action.payload.localDate
-      );
-    case "delete-reminder":
-      return reminders.filter((r, idx) => idx !== action.payload);
-    default:
-      return reminders;
-  }
-}
-console.log();
-
-function addReminderFunction(name, date, localDate) {
-  let oldReminders = JSON.parse(localStorage.getItem("reminders")) || [];
-  let newReminders = [
-    ...oldReminders,
-    { name: name, id: Date.now(), date: date, isComplete: localDate === date },
-  ].sort((a, b) => b.isComplete - a.isComplete);
-  // localStorage.setItem("reminders", JSON.stringify(newReminders));
-  return newReminders;
-}
-
-const Reminder = () => {
-  const [reminders, dispatch] = useReducer(
-    reducer,
-    JSON.parse(localStorage.getItem("reminders")) || []
-  );
-  const [addingVisible, setAddingVisible] = useState(false);
-  const [name, setName] = useState("");
-  const [date, setDate] = useState("");
-
-  const addingFrom = useRef();
-
-  useEffect(() => {
-    function handleOutsideFormClick(e) {
-      console.log(
-        document.getElementById("add-reminder-button").contains(e.target)
-      );
-
-      if (
-        addingVisible &&
-        !addingFrom.current.contains(e.target) &&
-        !document.getElementById("add-reminder-button").contains(e.target)
-      ) {
-        setAddingVisible(false);
-      }
-    }
-    if (addingVisible) {
-      document.addEventListener("click", handleOutsideFormClick);
-    }
-    return () => {
-      document.removeEventListener("click", handleOutsideFormClick);
-    };
-  }, [addingVisible]);
-
-  const daysAndToEnd = useCheckDaysToEnd();
-  const theDate = daysAndToEnd[4];
-  useEffect(() => {
-    localStorage.setItem("reminders", JSON.stringify(reminders));
-  }, [reminders]);
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (name && date) {
-      dispatch({
-        type: "add-reminder",
-
-        payload: { name: name, date: date, localDate: daysAndToEnd[4] },
-      });
-      setName("");
-      setDate("");
-      setAddingVisible(false);
-    }
-  }
-
-  console.log(daysAndToEnd[4]);
-
-  function checkIsComplete() {
-    reminders.map((reminder, i) => {
-      if (reminder.date === daysAndToEnd[4]) {
-        reminder.isComplete = true;
-      }
-      if (
-        +reminder.date.slice(5, 7) < +theDate.slice(5, 7) ||
-        (+reminder.date.slice(5, 7) === +theDate.slice(5, 7) &&
-          +reminder.date.slice(8, 10) < +theDate.slice(8, 10))
-      ) {
-        dispatch({ type: "delete-reminder", payload: i });
-      }
-    });
-  }
-
-  function sortReminders() {
-    if (reminders.length > 0) {
-      reminders.sort((a, b) => b.isComplete - a.isComplete);
-    }
-  }
-
-  useEffect(() => {
-    console.log("Updated");
-    checkIsComplete();
-    sortReminders();
-  }, [reminders, localStorage.getItem("reminders")]);
-
-  return (
-    <div className="reminder-container modern">
-      <div className="form-container relative">
-        <button
-          id="add-reminder-button"
-          className="add-reminder-btn"
-          type="button"
-          onClick={() => setAddingVisible(true)}
-        >
-          <span
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
-          >
-            <svg
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 5v14m7-7H5" />
-            </svg>
-            Add Reminder
-          </span>
-        </button>
-        {addingVisible && (
-          <form
-            ref={addingFrom}
-            className="reminder-form-modern absolute z-10 top-[500%] translate-y-[50%] left-[50%] translate-x-[-50%] bg-[#1a1333] px-20 py-10 rounded-[10px]"
-            onSubmit={handleSubmit}
-          >
-            <input
-              className="modern-input"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Reminder name"
-            />
-            <input
-              className="modern-input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-            />
-            <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
-              <button className="add-reminder-btn" type="submit">
-                Submit
-              </button>
-              <button
-                className="button-cancel"
-                type="button"
-                onClick={() => setAddingVisible(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-      <h1 className="reminder-list-title">Reminders</h1>
-      <div className="reminder-list modern">
-        {reminders && reminders.length > 0 ? (
-          reminders.map((reminderInfo, idx) => (
-            <div className="reminder-card" key={idx}>
-              <ReminderElement
-                reminderInfo={reminderInfo}
-                onDelete={() =>
-                  dispatch({ type: "delete-reminder", payload: idx })
-                }
-              />
-            </div>
-          ))
-        ) : (
-          <p className="empty-list-text">No reminders yet. Add one above!</p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Reminder;
